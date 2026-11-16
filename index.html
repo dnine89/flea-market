@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>대규네 플리마켓</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --card: #ffffff;
+    --ink: #1c1b19;
+    --muted: #77736b;
+    --line: #e7e4dd;
+    --accent: #e8590c;
+    --accent-ink: #ffffff;
+    --good: #2b8a3e;
+    --hold: #b08900;
+    --photo-bg: #efede8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 64px; }
+  header { padding: 40px 0 24px; }
+  header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card.sold { opacity: .55; }
+  .photo { position: relative; aspect-ratio: 4 / 3; background: var(--photo-bg); }
+  .photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .photo .noimg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+  .badge {
+    position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 999px;
+    font-size: 13px; font-weight: 700; color: #fff; background: var(--good);
+  }
+  .badge.hold { background: var(--hold); }
+  .badge.sold { background: #555; }
+
+  .body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .name { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+
+  .prices { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+  .price { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .orig { color: var(--muted); font-size: 14px; text-decoration: line-through; }
+  .off { color: var(--accent); font-size: 14px; font-weight: 700; }
+
+  dl { margin: 0; display: grid; grid-template-columns: 56px 1fr; gap: 6px 10px; font-size: 14px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; white-space: pre-line; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 8px; font-size: 13px; }
+  .memo { margin: 0; font-size: 14px; color: var(--muted); white-space: pre-line; }
+
+  .btn {
+    margin-top: auto; appearance: none; border: 0; border-radius: 12px; padding: 14px;
+    font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .btn:disabled { background: var(--line); color: var(--muted); cursor: default; }
+  .btn:not(:disabled):hover { filter: brightness(.95); }
+
+  .state { text-align: center; color: var(--muted); padding: 80px 0; }
+
+  dialog {
+    border: 0; border-radius: 18px; padding: 24px; width: min(400px, calc(100vw - 32px));
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.4); }
+  dialog h2 { margin: 0 0 4px; font-size: 19px; }
+  dialog p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  dialog input {
+    width: 100%; font: inherit; font-size: 16px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 10px; outline: none;
+  }
+  dialog input:focus { border-color: var(--accent); }
+  .row { display: flex; gap: 8px; margin-top: 16px; }
+  .row .btn { flex: 1; margin: 0; }
+  .btn.ghost { background: var(--bg); color: var(--ink); }
+  .err { color: #c92a2a; font-size: 14px; margin-top: 10px; min-height: 1em; }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 15px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>대규네 플리마켓</h1>
+    <p>사고 싶은 물품에 "내가 살게요"를 누르고 이름을 남겨 주세요. 따로 연락드릴게요.</p>
+  </header>
+  <main id="list"><div class="state">물품을 불러오는 중…</div></main>
+</div>
+
+<dialog id="dlg">
+  <form id="form" method="dialog">
+    <h2 id="dlgTitle">찜하기</h2>
+    <p>이름을 남겨 주시면 따로 연락드릴게요.</p>
+    <input id="buyer" name="buyer" placeholder="이름" maxlength="30" autocomplete="name" required>
+    <div class="err" id="err"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="cancel">취소</button>
+      <button type="submit" class="btn" id="ok">찜하기</button>
+    </div>
+  </form>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+  var listEl = document.getElementById('list');
+  var dlg = document.getElementById('dlg');
+  var form = document.getElementById('form');
+  var buyerEl = document.getElementById('buyer');
+  var errEl = document.getElementById('err');
+  var okBtn = document.getElementById('ok');
+  var current = null;
+
+  // 구글 시트와 데이터를 주고받는 주소 (로그인 정보 없이 요청한다)
+  var API = 'https://script.google.com/macros/s/AKfycbyGbFe5bKrXt5tVTDNQYJFwoCXK7el-5f43r_KcWPQFNJ_SdgECBm2ooc6rr4_pbVG51g/exec';
+
+  function won(n) { return n ? n.toLocaleString('ko-KR') + '원' : ''; }
+
+  function api(params) {
+    params.t = Date.now();
+    return fetch(API + '?' + new URLSearchParams(params), { credentials: 'omit', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
+  }
+
+  function call(fn, args) {
+    if (fn === 'getItems') {
+      return api({ action: 'items' }).then(function (res) {
+        if (!res.ok) throw new Error(res.message || 'failed');
+        return res.items;
+      });
+    }
+    return api({ action: 'reserve', row: args[0], name: args[1], buyer: args[2] });
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  var ORDER = { '판매중': 0, '예약중': 1, '판매완료': 2 };
+
+  function render(items) {
+    listEl.textContent = '';
+    if (!items.length) { listEl.appendChild(el('div', 'state', '아직 올라온 물품이 없어요.')); return; }
+    items.sort(function (a, b) { return (ORDER[a.status] ?? 1) - (ORDER[b.status] ?? 1); });
+    var grid = el('div', 'grid');
+    items.forEach(function (it) {
+      var sold = it.status === '판매완료';
+      var hold = !sold && it.status !== '판매중';
+      var card = el('article', 'card' + (sold ? ' sold' : ''));
+
+      var ph = el('div', 'photo');
+      if (it.photo) {
+        var img = el('img');
+        img.src = it.photo; img.alt = it.name; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+        img.onerror = function () { img.remove(); ph.appendChild(el('div', 'noimg', '사진 준비 중')); };
+        ph.appendChild(img);
+      } else {
+        ph.appendChild(el('div', 'noimg', '사진 준비 중'));
+      }
+      ph.appendChild(el('span', 'badge' + (sold ? ' sold' : hold ? ' hold' : ''), it.status));
+      card.appendChild(ph);
+
+      var body = el('div', 'body');
+      body.appendChild(el('h3', 'name', it.name));
+
+      var pr = el('div', 'prices');
+      pr.appendChild(el('span', 'price', won(it.price) || '가격 문의'));
+      if (it.original && it.price && it.original > it.price) {
+        pr.appendChild(el('span', 'orig', '정가 ' + won(it.original)));
+        pr.appendChild(el('span', 'off', Math.round((1 - it.price / it.original) * 100) + '% 저렴'));
+      } else if (it.original) {
+        pr.appendChild(el('span', 'orig', '정가 ' + won(it.original)));
+      }
+      body.appendChild(pr);
+
+      var dl = el('dl');
+      if (it.condition) { dl.appendChild(el('dt', null, '상태')); dl.appendChild(el('dd', null, it.condition)); }
+      var acc = it.accessories.split(/[,\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (acc.length) {
+        dl.appendChild(el('dt', null, '구성품'));
+        var dd = el('dd', 'chips');
+        acc.forEach(function (a) { dd.appendChild(el('span', 'chip', a)); });
+        dl.appendChild(dd);
+      }
+      if (dl.childNodes.length) body.appendChild(dl);
+      if (it.memo) body.appendChild(el('p', 'memo', it.memo));
+
+      var btn = el('button', 'btn', sold ? '판매 완료' : hold ? '예약 중' : '내가 살게요');
+      btn.disabled = sold || hold;
+      btn.onclick = function () { open(it); };
+      body.appendChild(btn);
+
+      card.appendChild(body);
+      grid.appendChild(card);
+    });
+    listEl.appendChild(grid);
+  }
+
+  function load() {
+    call('getItems').then(render).catch(function () {
+      listEl.textContent = '';
+      listEl.appendChild(el('div', 'state', '물품을 불러오지 못했어요. 새로고침해 주세요.'));
+    });
+  }
+
+  function open(it) {
+    current = it;
+    document.getElementById('dlgTitle').textContent = it.name;
+    errEl.textContent = '';
+    okBtn.disabled = false;
+    dlg.showModal();
+    buyerEl.focus();
+  }
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
+
+  document.getElementById('cancel').onclick = function () { dlg.close(); };
+  form.onsubmit = function (e) {
+    e.preventDefault();
+    var name = buyerEl.value.trim();
+    if (!name) { errEl.textContent = '이름을 적어 주세요.'; return; }
+    okBtn.disabled = true;
+    call('reserve', [current.row, current.name, name]).then(function (res) {
+      if (res && res.ok) {
+        dlg.close(); buyerEl.value = '';
+        toast('찜했어요! 곧 연락드릴게요.');
+      } else {
+        errEl.textContent = (res && res.message) || '잠시 후 다시 시도해 주세요.';
+        okBtn.disabled = false;
+      }
+      load();
+    }).catch(function () {
+      errEl.textContent = '잠시 후 다시 시도해 주세요.';
+      okBtn.disabled = false;
+    });
+  };
+
+  load();
+</script>
+</body>
+</html>
