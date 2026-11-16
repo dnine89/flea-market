@@ -198,7 +198,7 @@
       pr.appendChild(el('span', 'price', won(it.price) || '가격 문의'));
       if (it.original && it.price && it.original > it.price) {
         pr.appendChild(el('span', 'orig', '정가 ' + won(it.original)));
-        pr.appendChild(el('span', 'off', Math.round((1 - it.price / it.original) * 100) + '% 저렴'));
+        pr.appendChild(el('span', 'off', '신품 대비 ' + Math.round((1 - it.price / it.original) * 100) + '% 저렴'));
       } else if (it.original) {
         pr.appendChild(el('span', 'orig', '정가 ' + won(it.original)));
       }
