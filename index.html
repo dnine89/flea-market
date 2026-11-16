@@ -29,7 +29,11 @@
     line-height: 1.5;
   }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 64px; }
-  header { padding: 40px 0 24px; }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    padding: 28px 0 18px; margin-bottom: 20px;
+  }
   header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
   header p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
 
@@ -72,6 +76,10 @@
   }
   .btn:disabled { background: var(--line); color: var(--muted); cursor: default; }
   .btn:not(:disabled):hover { filter: brightness(.95); }
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .actions .btn { margin-top: 0; }
+  a.btn { display: block; text-align: center; text-decoration: none; }
+  .btn.link { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
 
   .state { text-align: center; color: var(--muted); padding: 80px 0; }
 
@@ -103,7 +111,7 @@
 <div class="wrap">
   <header>
     <h1>대규네 플리마켓</h1>
-    <p>사고 싶은 물품에 "내가 살게요"를 누르고 이름을 남겨 주세요. 따로 연락드릴게요.</p>
+    <p>여기서는 민트급 중고만 취급합니다. 사고 싶은 물품에 "내가 살게요"를 누르고 이름을 남겨 주세요. 따로 연락드릴게요.</p>
   </header>
   <main id="list"><div class="state">물품을 불러오는 중…</div></main>
 </div>
@@ -208,10 +216,17 @@
       if (dl.childNodes.length) body.appendChild(dl);
       if (it.memo) body.appendChild(el('p', 'memo', it.memo));
 
+      var actions = el('div', 'actions');
+      if (it.link) {
+        var a = el('a', 'btn link', '상품 알아보기');
+        a.href = it.link; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        actions.appendChild(a);
+      }
       var btn = el('button', 'btn', sold ? '판매 완료' : hold ? '예약 중' : '내가 살게요');
       btn.disabled = sold || hold;
       btn.onclick = function () { open(it); };
-      body.appendChild(btn);
+      actions.appendChild(btn);
+      body.appendChild(actions);
 
       card.appendChild(body);
       cards.push(card);
