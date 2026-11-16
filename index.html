@@ -205,7 +205,6 @@
       body.appendChild(pr);
 
       var dl = el('dl');
-      if (it.condition) { dl.appendChild(el('dt', null, '상태')); dl.appendChild(el('dd', null, it.condition)); }
       var acc = it.accessories.split(/[,\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
       if (acc.length) {
         dl.appendChild(el('dt', null, '구성품'));
